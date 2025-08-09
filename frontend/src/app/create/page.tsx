@@ -10,23 +10,53 @@ export default function CreateGame() {
   const { stxBalance, userData, connectWallet, handleCreateGame } = useStacks();
 
   const [betAmount, setBetAmount] = useState(0);
-  // When creating a new game, the initial board is entirely empty
   const [board, setBoard] = useState(EMPTY_BOARD);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function onCellClick(index: number) {
-    // Update the board to be the empty board + the move played by the user
-    // Since this is inside 'Create Game', the user's move is the very first move and therefore always an X
+    // Tidak bisa klik jika sedang dalam proses creating
+    if (isCreating) return;
+
     const tempBoard = [...EMPTY_BOARD];
     tempBoard[index] = Move.X;
     setBoard(tempBoard);
   }
 
-  async function onCreateGame() {
-    // Find the moveIndex (i.e. the cell) where the user played their move
+  function onCreateGame() {
+    // Validasi terlebih dahulu
+    if (isCreating) return;
+
     const moveIndex = board.findIndex((cell) => cell !== Move.EMPTY);
+    if (moveIndex === -1) {
+      setError("Please make a move first");
+      return;
+    }
+
+    if (betAmount <= 0) {
+      setError("Please enter a valid bet amount");
+      return;
+    }
+
     const move = Move.X;
-    // Trigger the onchain transaction popup
-    await handleCreateGame(parseStx(betAmount), moveIndex, move);
+
+    // Set loading state immediately untuk feedback UI
+    setIsCreating(true);
+    setError(null);
+
+    // Handle promise tanpa await untuk tidak block UI
+    handleCreateGame(parseStx(betAmount), moveIndex, move)
+      .then(() => {
+        // Success - bisa redirect atau show success message
+        console.log("Game created successfully!");
+      })
+      .catch((err) => {
+        console.error("Failed to create game:", err);
+        setError(err.message || "Failed to create game");
+      })
+      .finally(() => {
+        setIsCreating(false);
+      });
   }
 
   return (
@@ -54,32 +84,56 @@ export default function CreateGame() {
             placeholder="0"
             value={betAmount}
             onChange={(e) => {
-              setBetAmount(parseInt(e.target.value));
+              setBetAmount(parseFloat(e.target.value));
             }}
+            disabled={isCreating}
           />
           <div
-            className="text-xs px-1 py-0.5 cursor-pointer hover:bg-gray-700 bg-gray-600 border border-gray-600 rounded"
+            className={`text-xs px-1 py-0.5 cursor-pointer border border-gray-600 rounded ${
+              isCreating
+                ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                : "hover:bg-gray-700 bg-gray-600"
+            }`}
             onClick={() => {
-              setBetAmount(formatStx(stxBalance));
+              if (!isCreating) {
+                setBetAmount(formatStx(stxBalance));
+              }
             }}
           >
             Max
           </div>
         </div>
 
+        {error && (
+          <div className="text-red-500 text-sm text-center">{error}</div>
+        )}
+
         {userData ? (
           <button
             type="button"
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className={`px-4 py-2 rounded text-white ${
+              isCreating
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
             onClick={onCreateGame}
+            disabled={isCreating}
           >
-            Create Game
+            {isCreating ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Creating Game...
+              </span>
+            ) : (
+              "Create Game"
+            )}
           </button>
         ) : (
           <button
             type="button"
             onClick={connectWallet}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            disabled={isCreating}
           >
             Connect Wallet
           </button>
