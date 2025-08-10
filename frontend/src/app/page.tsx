@@ -1,5 +1,5 @@
-import { GamesList } from "../../components/games-list";
-import { getAllGames } from "../../lib/contract";
+import { GamesList } from "../components/game-list";
+import { getAllGames } from "@/lib/contract";
 
 export const dynamic = "force-dynamic";
 

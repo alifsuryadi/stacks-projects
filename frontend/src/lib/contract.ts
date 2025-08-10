@@ -11,7 +11,6 @@ import {
   UIntCV,
 } from "@stacks/transactions";
 
-// const CONTRACT_ADDRESS = "ST3P49R8XXQWG69S66MZASYPTTGNDKK0WW32RRJDN";
 const CONTRACT_ADDRESS = "ST6CNKYDESYCXQ1AQT2DWH56NFS76RB9SHHF6H3H";
 const CONTRACT_NAME = "tic-tac-toe";
 
@@ -74,6 +73,34 @@ export async function getAllGames() {
   }
   return games;
 }
+
+// Tambahkan parameter untuk halaman dan jumlah item per halaman
+// export async function getAllGames(page: number, pageSize: number) {
+//     const latestGameIdCV = (await fetchCallReadOnlyFunction({
+//         contractAddress: CONTRACT_ADDRESS,
+//         contractName: CONTRACT_NAME,
+//         functionName: "get-latest-game-id",
+//         functionArgs: [],
+//         senderAddress: CONTRACT_ADDRESS,
+//         network: STACKS_TESTNET,
+//     })) as UIntCV;
+
+//     const latestGameId = parseInt(latestGameIdCV.value.toString());
+
+//     // Hitung rentang game yang akan diambil
+//     const startIndex = latestGameId - (page * pageSize);
+//     const endIndex = latestGameId - ((page - 1) * pageSize);
+
+//     const games: Game[] = [];
+//     // Loop hanya untuk rentang game yang dibutuhkan di halaman ini
+//     for (let i = startIndex; i < endIndex; i++) {
+//         if (i < 0) break; // Pastikan gameId tidak negatif
+//         const game = await getGame(i);
+//         if (game) games.push(game);
+//     }
+
+//     return games;
+// }
 
 export async function getGame(gameId: number) {
   // Use the get-game read only function to fetch the game details for the given gameId
