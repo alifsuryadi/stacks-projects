@@ -7,6 +7,7 @@ import {
   type UserData,
   UserSession,
 } from "@stacks/connect";
+// import { InvalidStateError } from "@stacks/auth";
 import { PostConditionMode } from "@stacks/transactions";
 import { useEffect, useState } from "react";
 
@@ -124,12 +125,16 @@ export function useStacks() {
   }
 
   useEffect(() => {
-    if (userSession.isSignInPending()) {
-      userSession.handlePendingSignIn().then((userData) => {
-        setUserData(userData);
-      });
-    } else if (userSession.isUserSignedIn()) {
-      setUserData(userSession.loadUserData());
+    try {
+      if (userSession.isSignInPending()) {
+        userSession.handlePendingSignIn().then((userData) => {
+          setUserData(userData);
+        });
+      } else if (userSession.isUserSignedIn()) {
+        setUserData(userSession.loadUserData());
+      }
+    } catch (error) {
+      console.error(error);
     }
   }, []);
 
